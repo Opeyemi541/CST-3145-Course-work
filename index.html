@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+    <link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
+    <title>Subject Shopping Cart</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+          <h1 v-text="sitename"></h1>
+          <button v-on:click="showCartPage" v-if="cartItemCount > 0" >
+            {{ cartItemCount }}
+            <span class="fas fa-cart-plus"></span> Checkout</button>
+          </button>
+          <div>
+            <span>Sort by</span>
+            <p></p>
+            <label for="Subject">Subject</label>
+            <input type="radio" value="Subject" v-model="sort" checked>
+  <br>
+            <label for="Location">Location</label>
+            <input type="radio" value="Location" v-model="sort">
+  <br>
+            <label for="Price">Price</label>
+            <input type="radio" value="Price" v-model="sort">
+  <br>
+            <label>Availability</label>
+            <input type="radio"  value="Space" v-model="sort">
+  
+          </div>
+          <div>
+            <br>
+            <label for="ascending">Ascending order</label>
+            <input type="radio"  value="true" v-model="ascend" checked>
+            <label for="descending">Descending order </label>
+            <input type="radio" value="false" v-model="ascend">
+          </div>
+          <br>
+          <div> <input type="text" placeholder="Search" v-model="searchValue"></div>
+        </header>
+        <main>
+        <div v-if="showCart">
+            <div v-for="lesson in sortLesson">
+            <figure>
+                <img :src="lesson.image" alt="">
+            </figure>
+            <h2 v-text="lesson.Subject"></h2>
+            <p v-text="lesson.Location"></p>
+            <p>Price: {{ lesson.Price}}</p>
+            <p>Space: {{ lesson.Space > 0 ?
+                lesson.Space : "All out"}}</p>
+            <button v-on:click="addLesson(lesson)" v-if="canAddToCart" :disabled="lesson.Space < 1">
+                Add To Cart
+            </button>
+            <button disabled='disabled'v-else>Add to cart</button>
+        </div>
+    </div>
+        <div v-else>
+            <h1>Shopping Cart</h1>
+            <div v-for="lesson in cartItem()">
+            <h3 v-text="lesson.Subject"></h3>
+            <img :src="lesson.image" alt="">
+            <h4 v-text="lesson.Location"></h4>
+            <p>Price: ${{ lesson.Price }}</p>
+            <button v-on:click="removeItem(lesson.id)">Remove</button>
+            </div>
+            <p>
+                <strong>Name:</strong>
+                <input type="text" v-model.trim="name">
+            </p>
+            <p>
+                <strong>Phone Number:</strong>
+                <input type="number" v-model.number="phone">
+            </p>
+            <button v-on:click="submitForm">Check Out</button>
+        </div>
+        </main>
+    </div>
+    <script src="lessons.js"></script>
+    <script type="text/javascript">
+        var lessonObj = new Vue({
+            el:'#app',
+            data: {
+                lesson:lesson,
+                showCart: true,
+                sitename:"Lessons Shop",
+                name:"",
+                phone:"",
+                sort:'Subject',
+                ascend: String('true'),
+                searchValue:"",
+            // lesson:{
+            //     id:'001',
+            //     Subject:"Math",
+            //     Location:"London",
+            //     Price:200,
+            //     Space:5,
+            //     availableSpace:5,
+            //     image:"Math4-web.jpg"  
+            // },
+            cart: [] //array to store lessons
+            },
+            methods: {
+                addLesson(lesson){
+                    this.cart.push(lesson)
+                    lesson.Space -= 1
+                },
+                showCartPage(){
+                    this.showCart = this.showCart ? false : true;
+                },
+                submitForm() {
+                    let showcart = this.cart
+                    if (this.name == '' && this.phone ==''){
+                    alert('Please Enter Valid Name and/or Phone Number')
+                }
+                else{
+                    alert('Check Out Successful')
+                }
+                },
+                cartCount(id){
+                    let count = 0;
+                    for(let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                }},
+                canAddToCart: function(lesson){
+                    return this.lesson.availableSpace > this.cartCount(lesson.id);
+                },
+                cartItem(){
+                    let show = this.cart
+                    return show
+                },
+                removeItem(id) {
+                    let removeItem = this.cart
+                    let leson = this.lessons
+                    for (let i = 0; i < removeItem.length; i++) {
+                        console.log(removeItem[i].id)
+                        if (id == removeItem[i].id) {
+                            removeItem.splice(i, 1)
+
+                        }
+                    }
+                    for (let i = 0; i < leson.length; i++) {
+                        console.log(l_[i].id)
+                        if (id == l_[i].id) {
+                            l_[i].Space += 1
+
+                        }
+                    }
+                },
+            },
+            computed: {
+                cartItemCount: function(){
+                    return this.cart.length || '';
+                },
+                sortLesson(){
+                    //Search Process Code
+                    let tempLessons = this.lesson;
+
+            tempLessons = tempLessons.filter((lesson) => {
+              return (
+                lesson.Subject.toLowerCase()
+                  .includes(this.searchValue.toLowerCase()) ||
+                lesson.Location.toLowerCase()
+                  .includes(this.searchValue.toLowerCase())
+              );
+            });
+                        //Sort Process
+                            if (this.sort == 'Subject') {
+                                if (this.ascend == "true") {
+                                    return this.lesson.sort((a, b) => a.Subject < b.Subject ? -1 : 1);
+                                }
+                                else {
+                                    return this.lesson.sort((a, b) => a.Subject < b.Subject ? 1 : -1);
+                                }
+                            }
+                            if (this.sort == 'Location') {
+                                if (this.ascend == "true") {
+                                    return this.lesson.sort((a, b) => a.Location < b.Location ? -1 : 1);
+                                }
+                                else {
+                                    return this.lesson.sort((a, b) => a.Location < b.Location ? 1 : -1);
+                                }
+                            }
+                            if (this.sort == 'Price') {
+                                if (this.ascend == "true") {
+                                    return this.lesson.sort((a, b) => a.Price < b.Price ? -1 : 1);
+                                }
+                                else {
+                                    return this.lesson.sort((a, b) => a.Price < a.Price ? 1 : -1);
+                                }
+                            }
+                            if (this.sort == 'Space') {
+                                if (this.ascend == "true") {
+                                    return this.lesson.sort((a, b) => a.Space < b.Space ? -1 : 1);
+                                }
+                                else {
+                                    return this.lesson.sort((a, b) => a.Space < b.Space ? 1 : -1);
+                                }
+                            }
+                            else {
+                                return this.lesson.sort((a, b) => a.Subject < b.Subject ? -1 : 1);
+                            }
+
+                        }
+            }
+        })
+    </script>
+</body>
+</html>

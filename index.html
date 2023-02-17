@@ -34,17 +34,17 @@
       </div>
 
       <div id="lesson-container" v-if="showCart">
-        <div class="card" v-for="lessonInfo in sortLesson" :key="lesson.Subject">
+        <div class="card" v-for="lessons in sortLesson" :key="lesson.Subject">
         <figure class="lesson-image">
-            <img :src="lessonInfo.image" alt="">
+            <img :src="lessons.image" alt="">
         </figure>
         <div class="content">
-        <h2 class="subject">Subject: {{ lessonInfo.Subject}}</h2>
-        <p>Location: {{ lessonInfo.Location}} </p>
-        <p>Price: {{ lessonInfo.Price}}</p>
-        <p>Space: {{ lessonInfo.Space > 0 ?
-            lessonInfo.Space : "All out"}}</p>
-        <button v-on:click="addLesson(lessonInfo)" v-if="canAddToCart" :disabled="lessonInfo.Space < 1">
+        <h2 class="subject">Subject: {{ lessons.Subject}}</h2>
+        <p>Location: {{ lessons.Location}} </p>
+        <p>Price: {{ lessons.Price}}</p>
+        <p>Space: {{ lessons.Space > 0 ?
+            lessons.Space : "All out"}}</p>
+        <button v-on:click="addLesson(lessons)" v-if="canAddToCart" :disabled="lessons.Space < 1">
             Add To Cart
         </button>
         <button disabled='disabled'v-else>Add to cart</button>
@@ -58,12 +58,12 @@
           </button>
         <div class="card">
         <h1>Shopping Cart</h1>
-            <div v-for="lessonInfo in cartItem()">
-            <h3 v-text="lessonInfo.Subject"></h3>
-            <img :src="lessonInfo.image" alt="">
-            <h4 v-text="lessonInfo.Location"></h4>
-            <p>Price: ${{ lessonInfo.Price }}</p>
-            <button v-on:click="removeItem($event, lessonInfo.id)">Remove</button>
+            <div v-for="lessons in cartItem()">
+            <h3 v-text="lessons.Subject"></h3>
+            <img :src="lessons.image" alt="">
+            <h4 v-text="lessons.Location"></h4>
+            <p>Price: ${{ lessons.Price }}</p>
+            <button v-on:click="removeItem($event, lessons.id)">Remove</button>
             </div>
         </div>
             <p>
@@ -83,7 +83,7 @@
 var lessonObj = new Vue({
     el:'#app',
     data: {
-        lesson:lessonInfo,
+        lesson:lessons,
         ascending: true,
         sortBy: 'Subject',
         searchValue: '',
@@ -108,7 +108,7 @@ computed: {
         })
       }
 // Sort by Subject 
-    lessonInfo.sort((a, b) => {
+    lessons.sort((a, b) => {
         if (this.sortBy == 'Subject') {
             let fa = a.Subject.toLowerCase(), fb = b.Subject.toLowerCase()
           if (fa < fb) {
@@ -164,9 +164,9 @@ methods: {
     showCartPage(){
         this.showCart = this.showCart ? false : true;
     },
-    addLesson(lessonInfo){
-        this.cart.push(lessonInfo)
-        lessonInfo.Space -= 1
+    addLesson(lessons){
+        this.cart.push(lessons)
+        lessons.Space -= 1
     },
     cartCount(id){
             let count = 0;
@@ -176,8 +176,8 @@ methods: {
                 }
             }
     },
-    canAddToCart: function(lesson){
-        return this.lesson.availableSpace > this.cartCount(lesson.id);
+    canAddToCart: function(lessons){
+        return this.lesson.availableSpace > this.cartCount(lessons.id);
     },
     cartItem(){
         let show = this.cart
@@ -185,30 +185,60 @@ methods: {
     },
     removeItem(event, id) {
         let idx;
-        let [lessonInfo, index] = this.lesson.filter((k, index) => {
+        let [lessons, index] = this.lesson.filter((k, index) => {
             if (k.id == id) {
             idx = index;
             return k;
               }
             });
 
-            lessonInfo.Space ++
-            this.cart.pop(lessonInfo.id);
-            // for (let i = 0; i < remove.length; i++) {
-            //     if (id == remove[i].id) {
-            //         remove.splice(i, 1)
-            //     }
-            // }
-            // for (let i = 0; i < leson.length; i++) {
-            //     if (id == l_[i].id) {
-            //     l_[i].Space += 1
-            //     }
-            // } 
+            lessons.Space ++
+            this.cart.pop(lessons.id);
     },
-    submitForm() {
+    async submitForm() {
         alert('Check Out Successful')
+        const response = await fetch("http://localhost:3000/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: this.name, phone: this.phone }),
+      });
+      const data = await response.json();
+      console.log(data);
+      alert('Check Out Successful')
+    },
+    created: function(){
+        //Fetch to retrieve all lessons with GET
+        fetch('http://individualcw2-env.eba-ataitxxx.eu-west-2.elasticbeanstalk.com/')
+            .then(response => response.json())
+            .then(lessons => console.log(lessons))
+            .catch(error => console.error(error));
+
+  // Fetch to update available lesson space with PUT
+    fetch('http://individualcw2-env.eba-ataitxxx.eu-west-2.elasticbeanstalk.com/', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({lesson: {availableSpaces: 5}})
+})
+  .then(response => response.json())
+  .then(lesson => console.log(lesson))
+  .catch(error => console.error(error));
+    },
+    //search
+    searchLessons(query) {
+        fetch(`/search?q=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                // handle the search results
+            })
+            .catch(error => console.error(error));
     }
+
     }
+    
 })
 </script>
 </body>
